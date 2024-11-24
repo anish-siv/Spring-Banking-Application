@@ -14,16 +14,23 @@ public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
 
+    @Autowired
+    private UserService userService;
+
     // Create new account
-    public Account createAccount(User user) {
+    public Account createAccount(Long userId, String accountType, BigDecimal initialBalance) {
+        User user = userService.findById(userId);
+
         Account account = new Account();
         account.setAccountNumber(generateAccountNumber());
+        account.setAccountType(accountType);
+        account.setBalance(initialBalance);
         account.setUser(user);
-        account.setBalance(BigDecimal.ZERO);
+
         return accountRepository.save(account);
     }
 
-    // Get user's accounts
+    // Get all accounts for a user
     public List<Account> getUserAccounts(Long userId) {
         return accountRepository.findByUserId(userId);
     }
@@ -49,6 +56,15 @@ public class AccountService {
         }
         account.setBalance(account.getBalance().subtract(amount));
         return accountRepository.save(account);
+    }
+
+    // Get account by number
+    public Account getAccount(String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber);
+        if (account == null) {
+            throw new RuntimeException("Account not found");
+        }
+        return account;
     }
 
     // Generate unique account number

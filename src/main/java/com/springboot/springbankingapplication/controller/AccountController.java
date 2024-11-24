@@ -2,11 +2,11 @@ package com.springboot.springbankingapplication.controller;
 
 import com.springboot.springbankingapplication.model.Account;
 import com.springboot.springbankingapplication.service.AccountService;
-import com.springboot.springbankingapplication.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -14,16 +14,16 @@ public class AccountController {
     @Autowired
     private AccountService accountService;
 
-    @Autowired
-    private UserService userService;
-
-    // Create new account
-    @PostMapping("/create/{userId}")
-    public ResponseEntity<?> createAccount(@PathVariable Long userId) {
+    // Create account
+    @PostMapping("/create")
+    public ResponseEntity<?> createAccount(
+            @RequestParam Long userId,
+            @RequestParam String accountType,
+            @RequestParam BigDecimal initialBalance) {
         try {
-            Account account = accountService.createAccount(userService.findById(userId));
+            Account account = accountService.createAccount(userId, accountType, initialBalance);
             return ResponseEntity.ok(account);
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -31,10 +31,15 @@ public class AccountController {
     // Get user's accounts
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserAccounts(@PathVariable Long userId) {
-        return ResponseEntity.ok(accountService.getUserAccounts(userId));
+        try {
+            List<Account> accounts = accountService.getUserAccounts(userId);
+            return ResponseEntity.ok(accounts);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    // Deposit money
+    // Deposit
     @PostMapping("/deposit")
     public ResponseEntity<?> deposit(
             @RequestParam String accountNumber,
@@ -42,12 +47,12 @@ public class AccountController {
         try {
             Account account = accountService.deposit(accountNumber, amount);
             return ResponseEntity.ok(account);
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    // Withdraw money
+    // Withdraw
     @PostMapping("/withdraw")
     public ResponseEntity<?> withdraw(
             @RequestParam String accountNumber,
@@ -55,7 +60,7 @@ public class AccountController {
         try {
             Account account = accountService.withdraw(accountNumber, amount);
             return ResponseEntity.ok(account);
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
