@@ -55,4 +55,28 @@ public class AccountService {
     private String generateAccountNumber() {
         return UUID.randomUUID().toString().substring(0, 10);
     }
+
+    public void transfer(String fromAccountNumber, String toAccountNumber, BigDecimal amount) {
+        // Get both accounts
+        Account fromAccount = accountRepository.findByAccountNumber(fromAccountNumber);
+        Account toAccount = accountRepository.findByAccountNumber(toAccountNumber);
+
+        // Validate accounts exist
+        if (fromAccount == null || toAccount == null) {
+            throw new RuntimeException("One or both accounts not found");
+        }
+
+        // Check sufficient funds
+        if (fromAccount.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Insufficient funds for transfer");
+        }
+
+        // Perform transfer
+        fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
+        toAccount.setBalance(toAccount.getBalance().add(amount));
+
+        // Save both accounts
+        accountRepository.save(fromAccount);
+        accountRepository.save(toAccount);
+    }
 }
